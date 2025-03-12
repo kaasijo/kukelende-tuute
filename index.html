@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        .form-group button {
+            padding: 10px 15px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .form-group button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Login</h1>
+        <div class="form-group">
+            <label for="username">Gebruikersnaam:</label>
+            <input type="text" id="username">
+        </div>
+        <div class="form-group">
+            <label for="password">Wachtwoord:</label>
+            <input type="password" id="password">
+            <button onclick="login()">Login</button>
+        </div>
+        <div id="admin-dashboard" style="display:none;">
+            <h1>Admin Dashboard</h1>
+            <div class="form-group">
+                <label for="name">Naam:</label>
+                <input type="text" id="name">
+                <button onclick="addUser()">Voeg gebruiker toe</button>
+            </div>
+            <div class="form-group">
+                <label for="startTime">Starttijd:</label>
+                <input type="datetime-local" id="startTime">
+            </div>
+            <div class="form-group">
+                <label for="endTime">Eindtijd:</label>
+                <input type="datetime-local" id="endTime">
+            </div>
+            <div class="form-group">
+                <label for="location">Locatie:</label>
+                <input type="text" id="location">
+                <button onclick="registerTime()">Registreer tijd</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const admins = [{ username: 'admin', password: 'admin123' }];
+        let users = JSON.parse(localStorage.getItem('users')) || [];
+        let records = JSON.parse(localStorage.getItem('records')) || [];
+
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const admin = admins.find(a => a.username === username && a.password === password);
+            if (admin) {
+                document.getElementById('admin-dashboard').style.display = 'block';
+                alert('Login successful');
+            } else {
+                alert('Invalid credentials');
+            }
+        }
+
+        function addUser() {
+            const name = document.getElementById('name').value;
+            users.push({ name });
+            localStorage.setItem('users', JSON.stringify(users));
+            alert('User added');
+        }
+
+        function registerTime() {
+            const startTime = document.getElementById('startTime').value;
+            const endTime = document.getElementById('endTime').value;
+            const location = document.getElementById('location').value;
+            records.push({ userId: 1, startTime, endTime, location }); // userId moet dynamisch zijn
+            localStorage.setItem('records', JSON.stringify(records));
+            alert('Time registered');
+        }
+    </script>
+</body>
+</html>
