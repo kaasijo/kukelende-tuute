@@ -3,10 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+    <title>Readmin Dashboard</title>
     <style>
         body {
             font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
         }
         .container {
             max-width: 600px;
@@ -35,6 +38,22 @@
         .form-group button:hover {
             background-color: #0056b3;
         }
+        .dashboard {
+            display: none;
+        }
+        .dashboard h1 {
+            margin-top: 0;
+        }
+        .record-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .record-list li {
+            background-color: white;
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
     </style>
 </head>
 <body>
@@ -49,8 +68,8 @@
             <input type="password" id="password">
             <button onclick="login()">Login</button>
         </div>
-        <div id="admin-dashboard" style="display:none;">
-            <h1>Admin Dashboard</h1>
+        <div id="dashboard" class="dashboard">
+            <h1>Dashboard</h1>
             <div class="form-group">
                 <label for="name">Naam:</label>
                 <input type="text" id="name">
@@ -69,6 +88,8 @@
                 <input type="text" id="location">
                 <button onclick="registerTime()">Registreer tijd</button>
             </div>
+            <h2>Geregistreerde tijden</h2>
+            <ul id="recordList" class="record-list"></ul>
         </div>
     </div>
 
@@ -82,7 +103,7 @@
             const password = document.getElementById('password').value;
             const admin = admins.find(a => a.username === username && a.password === password);
             if (admin) {
-                document.getElementById('admin-dashboard').style.display = 'block';
+                document.getElementById('dashboard').style.display = 'block';
                 alert('Login successful');
             } else {
                 alert('Invalid credentials');
@@ -102,8 +123,21 @@
             const location = document.getElementById('location').value;
             records.push({ userId: 1, startTime, endTime, location }); // userId moet dynamisch zijn
             localStorage.setItem('records', JSON.stringify(records));
+            displayRecords();
             alert('Time registered');
         }
+
+        function displayRecords() {
+            const recordList = document.getElementById('recordList');
+            recordList.innerHTML = '';
+            records.forEach(record => {
+                const li = document.createElement('li');
+                li.textContent = `User ID: ${record.userId}, Start Time: ${record.startTime}, End Time: ${record.endTime}, Location: ${record.location}`;
+                recordList.appendChild(li);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', displayRecords);
     </script>
 </body>
 </html>
