@@ -12,9 +12,12 @@
             padding: 0;
         }
         .container {
-            max-width: 600px;
+            max-width: 800px;
             margin: 0 auto;
             padding: 20px;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
         }
         .form-group {
             margin-bottom: 15px;
@@ -27,6 +30,8 @@
             width: 100%;
             padding: 8px;
             box-sizing: border-box;
+            border: 1px solid #ddd;
+            border-radius: 4px;
         }
         .form-group button {
             padding: 10px 15px;
@@ -34,6 +39,7 @@
             color: white;
             border: none;
             cursor: pointer;
+            border-radius: 4px;
         }
         .form-group button:hover {
             background-color: #0056b3;
@@ -49,10 +55,22 @@
             padding: 0;
         }
         .record-list li {
-            background-color: white;
+            background-color: #f9f9f9;
             margin-bottom: 10px;
             padding: 10px;
             border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .nav {
+            margin-bottom: 20px;
+        }
+        .nav a {
+            margin-right: 10px;
+            text-decoration: none;
+            color: #007BFF;
+        }
+        .nav a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -69,65 +87,101 @@
             <button onclick="login()">Login</button>
         </div>
         <div id="dashboard" class="dashboard">
-            <h1>Dashboard</h1>
-            <div class="form-group">
-                <label for="name">Naam:</label>
-                <input type="text" id="name">
-                <button onclick="addUser()">Voeg gebruiker toe</button>
+            <div class="nav">
+                <a href="#" onclick="showAdminDashboard()">Admin Dashboard</a>
+                <a href="#" onclick="showEmployeeDashboard()">Medewerker Dashboard</a>
             </div>
-            <div class="form-group">
-                <label for="startTime">Starttijd:</label>
-                <input type="datetime-local" id="startTime">
+            <div id="admin-dashboard" style="display:none;">
+                <h1>Admin Dashboard</h1>
+                <div class="form-group">
+                    <label for="name">Naam:</label>
+                    <input type="text" id="name">
+                    <button onclick="addUser()">Voeg gebruiker toe</button>
+                </div>
+                <h2>Geregistreerde tijden</h2>
+                <ul id="recordList" class="record-list"></ul>
             </div>
-            <div class="form-group">
-                <label for="endTime">Eindtijd:</label>
-                <input type="datetime-local" id="endTime">
+            <div id="employee-dashboard" style="display:none;">
+                <h1>Medewerker Dashboard</h1>
+                <div class="form-group">
+                    <label for="startTime">Starttijd:</label>
+                    <input type="datetime-local" id="startTime">
+                </div>
+                <div class="form-group">
+                    <label for="endTime">Eindtijd:</label>
+                    <input type="datetime-local" id="endTime">
+                </div>
+                <div class="form-group">
+                    <label for="location">Locatie:</label>
+                    <input type="text" id="location">
+                    <button onclick="registerTime()">Registreer tijd</button>
+                </div>
+                <h2>Mijn geregistreerde tijden</h2>
+                <ul id="employeeRecordList" class="record-list"></ul>
             </div>
-            <div class="form-group">
-                <label for="location">Locatie:</label>
-                <input type="text" id="location">
-                <button onclick="registerTime()">Registreer tijd</button>
-            </div>
-            <h2>Geregistreerde tijden</h2>
-            <ul id="recordList" class="record-list"></ul>
         </div>
     </div>
 
     <script>
-        const admins = [{ username: 'cas', password: 'Kaassticks11!' }];
-        let users = JSON.parse(localStorage.getItem('users')) || [];
-        let records = JSON.parse(localStorage.getItem('records')) || [];
+        let currentUser = null;
 
-        function login() {
+        async function login() {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
-            const admin = admins.find(a => a.username === username && a.password === password);
-            if (admin) {
+            const response = await fetch('/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password })
+            });
+            const result = await response.json();
+            if (response.ok) {
+                currentUser = { username, role: result.role };
                 document.getElementById('dashboard').style.display = 'block';
-                alert('Login successful');
+                if (result.role === 'admin') {
+                    showAdminDashboard();
+                } else {
+                    showEmployeeDashboard();
+                }
+                alert(result.message);
             } else {
                 alert('Invalid credentials');
             }
         }
 
-        function addUser() {
+        async function addUser() {
             const name = document.getElementById('name').value;
-            users.push({ name });
-            localStorage.setItem('users', JSON.stringify(users));
-            alert('User added');
+            const response = await fetch('/addUser', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name })
+            });
+            const result = await response.text();
+            alert(result);
         }
 
-        function registerTime() {
+        async function registerTime() {
             const startTime = document.getElementById('startTime').value;
             const endTime = document.getElementById('endTime').value;
             const location = document.getElementById('location').value;
-            records.push({ userId: 1, startTime, endTime, location }); // userId moet dynamisch zijn
-            localStorage.setItem('records', JSON.stringify(records));
-            displayRecords();
-            alert('Time registered');
+            const response = await fetch('/registerTime', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ userId: currentUser.username, startTime, endTime, location })
+            });
+            const result = await response.text();
+            alert(result);
+            displayEmployeeRecords();
         }
 
-        function displayRecords() {
+        async function displayRecords() {
+            const response = await fetch('/getRecords');
+            const records = await response.json();
             const recordList = document.getElementById('recordList');
             recordList.innerHTML = '';
             records.forEach(record => {
@@ -137,7 +191,29 @@
             });
         }
 
-        document.addEventListener('DOMContentLoaded', displayRecords);
+        async function displayEmployeeRecords() {
+            const response = await fetch('/getRecords');
+            const records = await response.json();
+            const employeeRecordList = document.getElementById('employeeRecordList');
+            employeeRecordList.innerHTML = '';
+            records.filter(record => record.userId === currentUser.username).forEach(record => {
+                const li = document.createElement('li');
+                li.textContent = `Start Time: ${record.startTime}, End Time: ${record.endTime}, Location: ${record.location}`;
+                employeeRecordList.appendChild(li);
+            });
+        }
+
+        function showAdminDashboard() {
+            document.getElementById('admin-dashboard').style.display = 'block';
+            document.getElementById('employee-dashboard').style.display = 'none';
+            displayRecords();
+        }
+
+        function showEmployeeDashboard() {
+            document.getElementById('admin-dashboard').style.display = 'none';
+            document.getElementById('employee-dashboard').style.display = 'block';
+            displayEmployeeRecords();
+        }
     </script>
 </body>
 </html>
